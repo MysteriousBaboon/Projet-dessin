@@ -20,7 +20,7 @@ class App extends Component
 
     componentDidMount()
     {
-      axios.get(`/api/questions/1`)
+      axios.get(`/api/questions`)
         .then(res => {
           const ques = res.data;
           this.setState({ question: ques });
