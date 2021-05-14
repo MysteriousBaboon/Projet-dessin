@@ -17,5 +17,4 @@ class QuestionView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         random_id = random.randint(1, max_id)
-        print(random_id)
         return Question.objects.all().filter(id= random_id)
