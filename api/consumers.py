@@ -1,5 +1,6 @@
 # chat/consumers.py
 import json
+from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
 
@@ -11,6 +12,7 @@ class ChatConsumer(WebsocketConsumer):
         pass
 
     def receive(self, text_data):
+        print(text_data)
         text_data_json = json.loads(text_data)
         message = text_data_json['nom']
 

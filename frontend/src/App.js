@@ -16,7 +16,7 @@ class App extends Component
       this.state =
       {
         ws: null,
-        gameState: "index",
+        gameState: "titlescreen",
         question : ""
       }
     }
@@ -92,16 +92,23 @@ class App extends Component
 
     render()
     {
-      return <ChildComponent websocket={this.state.ws} />;
-      return(<Draw />)
-      if(this.state.gameState === "index")
+
+      if(this.state.gameState === "titlescreen")
       {
         return(
           <div>
-          <TitleScreen parentCallback = {this.handleCallback}/>
+          <TitleScreen websocket={this.state.ws} />
           </div>
         )
       }
+      // <TitleScreen parentCallback = {this.handleCallback} websocket={this.state.ws} />
+
+
+
+
+      //return <ChildComponent websocket={this.state.ws} />;
+      //return(<Draw />)
+
       /*
       if(this.state.gameState === "test")
       {
@@ -123,7 +130,6 @@ class App extends Component
 
 
 
-      //else return ();
 };
 
 export default App;
