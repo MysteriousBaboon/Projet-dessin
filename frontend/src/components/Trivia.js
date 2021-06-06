@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-//import axios from "axios";
 
 
 export default class Trivia extends Component
@@ -9,18 +8,55 @@ export default class Trivia extends Component
     super(props);
     this.state =
     {
-    //  questions : [axios.get("/api/questions/1")]
+      message: "",
     };
   }
 
+  myMessageHandler = (event) =>
+  {
+    this.setState({message:event.target.value})
+  }
+  sendMessage = () =>
+  {
+      const {websocket} = this.props // websocket instance passed as props to the child component.
+      try
+      {
+          websocket.send(JSON.stringify({"message": this.state.message})) //send data to the server
+
+      }
+      catch (error)
+      {
+          console.log(error) // catch error
+      }
+  }
+
+  handleClick = () =>
+{
+  this.props.parentCallback();
+}
+
   render()
-   {
-     console.log(this.props.value)
-     return(
-       <div>
-       <h1>Titre 2</h1>
-       <p>{this.props.value.question}</p>
-       </div>
-      )
-   }
+  {
+    return (
+      <div>
+
+
+      <form>
+      <h2>Envoyez un message</h2>
+      <input
+        type='text'
+        onChange={this.myMessageHandler}
+      />
+      </form>
+      <button onClick={this.sendMessage}> Click me </button>
+      <h2> Question: Qui est le plus bo </h2>
+      <ol>
+        <li><button onClick={this.handleClick}>Mark</button></li>
+        <li><button>Mark</button></li>
+        <li><button>Mark</button></li>
+      </ol>
+      </div>
+    );
+  }
+
 }
