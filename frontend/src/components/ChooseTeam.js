@@ -15,7 +15,7 @@ export default class ChooseTeam extends Component
       {
           console.log(error) // catch error
       }
-      this.props.parentCallback(color)
+      this.props.parentCallback(color.target.value)
   }
 
 
@@ -57,7 +57,7 @@ startGame = () =>
              <ul style={{color:"blue", textAlign: "center"}}>{blueteam}</ul>,
              </div>
 
-             {this.props.isHost == "True"  && <button onClick={this.startGame} style={{color:"green"}}> Start Game</button>}
+             {this.props.isHost === "True"  && <button onClick={this.startGame} style={{color:"green"}}> Start Game</button>}
 
              </div>
     );

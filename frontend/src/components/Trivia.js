@@ -16,13 +16,13 @@ export default class Trivia extends Component
   {
     this.setState({message:event.target.value})
   }
+
   sendMessage = () =>
   {
       const {websocket} = this.props // websocket instance passed as props to the child component.
       try
       {
           websocket.send(JSON.stringify({"message": this.state.message})) //send data to the server
-
       }
       catch (error)
       {
@@ -32,10 +32,12 @@ export default class Trivia extends Component
 
   chooseAnswer = (selected) =>
 {
+
+
   const {websocket} = this.props // websocket instance passed as props to the child component.
   try
   {
-      websocket.send(JSON.stringify({"answer": selected})) //send data to the server
+      websocket.send(JSON.stringify({"answer": selected.target.value, "color":this.props.color})) //send data to the server
   }
 
   catch (error)
@@ -54,8 +56,6 @@ export default class Trivia extends Component
 
     var display = answers.map((player) =>  <li key={player}><button value={player} onClick={this.chooseAnswer}>{player}</button></li>);
 
-
-
     return (
       <div>
 
@@ -67,6 +67,9 @@ export default class Trivia extends Component
       <button onClick={this.sendMessage}> Click me </button>
       <h2> {this.props.question.question} </h2>
       <ul style={{color:"red", textAlign: "center", listStyle: "none"}}>{display}</ul>,
+      <h3> Blue:{this.props.blue_score} </h3>
+      <h3> Red:{this.props.red_score} </h3>
+
       </div>
     );
   }

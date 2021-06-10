@@ -32,7 +32,7 @@ class ChatConsumer(WebsocketConsumer):
                 self.send(text_data=json.dumps({
                     'isHost': "True"
                 }))
-            elif resp == "NotHost":
+            elif resp[0] == "NotHost":
                 self.send(text_data=json.dumps({
                     'isHost': "False"
                 }))
@@ -69,11 +69,23 @@ class ChatConsumer(WebsocketConsumer):
                                                              'data': text_data_json
                                                          })
         elif "startGame" in text_data_json:
+            send_dict = self.game.pickQuestion()
 
             async_to_sync(self.channel_layer.group_send)(self.room_group_name,
                                                          {
                                                              'type': 'start_game',
-                                                             'data': text_data_json
+                                                             'data': send_dict
+                                                         })
+
+        elif "answer" in text_data_json:
+            game_score = self.game.checkAnswer(text_data_json['color'], text_data_json['answer'])
+            game_score["score"] = "score"
+            print(game_score)
+
+            async_to_sync(self.channel_layer.group_send)(self.room_group_name,
+                                                         {
+                                                             'type': 'check_answer',
+                                                             'data': game_score
                                                          })
 
     # Receive message from room group
@@ -90,7 +102,6 @@ class ChatConsumer(WebsocketConsumer):
         state_type = data['state']
 
         if state_type == "team":
-
             self.send(text_data=json.dumps({
                 'color': {"red": list(self.game.red_team.keys()), "blue": list(self.game.blue_team.keys())}
             }))
@@ -111,10 +122,13 @@ class ChatConsumer(WebsocketConsumer):
     # Start the game
     def start_game(self, event):
         # Send message to WebSocket
-
-        send_dict = self.game.pickQuestion()
-        self.send(text_data=json.dumps(send_dict))
+        data = event["data"]
+        print(event)
+        self.send(text_data=json.dumps(data))
 
     def check_answer(self, event):
-        send_dict = self.game.pickQuestion()
-        self.send(text_data=json.dumps(send_dict))
+        data = event['data']
+        print(data)
+
+
+        self.send(text_data=json.dumps(data))

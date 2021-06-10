@@ -15,6 +15,8 @@ class App extends Component
         ws: "ws",
         gameState: "titlescreen",
         round: 0,
+        blue_score: 0,
+        red_score: 0,
         id: "",
         players: null,
 
@@ -84,6 +86,13 @@ class App extends Component
            {
              this.setState({ players: data.color });
            }
+
+           else if(data.score)
+           {
+             this.setState({ blue_score: data.blue });
+             this.setState({ red_score: data.red });
+
+           }
        };
 
     };
@@ -106,6 +115,7 @@ class App extends Component
 
     ColorCallback = (color) =>
     {
+
       this.setState({teamColor: color})
     }
 
@@ -139,7 +149,7 @@ class App extends Component
       {
         return(
           <div>
-          <Trivia parentCallback={this.TempCallback} websocket={this.state.ws} players={this.state.players}  question={this.state.question}/>
+          <Trivia parentCallback={this.TempCallback} websocket={this.state.ws} players={this.state.players}  question={this.state.question} color={this.state.teamColor} blue_score={this.state.blue_score} red_score={this.state.red_score}/>
           </div>
         )
       }

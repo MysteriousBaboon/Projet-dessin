@@ -19,7 +19,7 @@ def add_new_player(room_id, pseudo):
     # Check if the pseudo is already taken if not create a player with this
     if pseudo not in current_games[room_id].username_list:
         current_games[room_id].append_player(player)
-        return "NotHost"
+        return "NotHost", current_games[room_id]
     return False
 
 
@@ -83,10 +83,14 @@ class Game:
     def checkAnswer(self, team, answer):
         if self.last_answer == answer:
             if team == "red":
+                print(team, answer)
                 self.red_points += 1
             if team == "blue":
+                print(team, answer)
+
                 self.blue_points += 1
 
+        return {"red": self.red_points, "blue": self.blue_points}
 
 
 class Player:
