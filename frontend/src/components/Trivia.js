@@ -30,31 +30,43 @@ export default class Trivia extends Component
       }
   }
 
-  handleClick = () =>
+  chooseAnswer = (selected) =>
 {
-  this.props.parentCallback();
+  const {websocket} = this.props // websocket instance passed as props to the child component.
+  try
+  {
+      websocket.send(JSON.stringify({"answer": selected})) //send data to the server
+  }
+
+  catch (error)
+  {
+      console.log(error) // catch error
+  }
 }
 
   render()
   {
+    var answers = []
+
+    for (var key in this.props.question.answers) {
+      answers.push(this.props.question.answers[key]);
+    }
+
+    var display = answers.map((player) =>  <li key={player}><button value={player} onClick={this.chooseAnswer}>{player}</button></li>);
+
+
+
     return (
       <div>
 
 
       <form>
       <h2>Envoyez un message</h2>
-      <input
-        type='text'
-        onChange={this.myMessageHandler}
-      />
+      <input type='text' onChange={this.myMessageHandler}/>
       </form>
       <button onClick={this.sendMessage}> Click me </button>
-      <h2> Question: Qui est le plus bo </h2>
-      <ol>
-        <li><button onClick={this.handleClick}>Mark</button></li>
-        <li><button>Mark</button></li>
-        <li><button>Mark</button></li>
-      </ol>
+      <h2> {this.props.question.question} </h2>
+      <ul style={{color:"red", textAlign: "center", listStyle: "none"}}>{display}</ul>,
       </div>
     );
   }

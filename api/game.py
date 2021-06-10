@@ -14,7 +14,7 @@ def add_new_player(room_id, pseudo):
         current_games[room_id] = Game(room_id)
         current_games[room_id].append_player(player)
 
-        return "Host"
+        return "Host", current_games[room_id]
 
     # Check if the pseudo is already taken if not create a player with this
     if pseudo not in current_games[room_id].username_list:
@@ -64,9 +64,29 @@ class Game:
         max_id = Question.objects.all().aggregate(max_id=Max("id"))['max_id']
         pk = random.randint(1, max_id)
         question_dict = model_to_dict(Question.objects.get(pk=pk))
-        self.last_answer = question_dict["answer"]
 
-        return question_dict
+        # Create a cleaned dict with all the correct possible answers
+        answers = {"answer": question_dict["answer"]}
+        if question_dict["false_answer1"] != "nan":
+            answers["false_answer1"] = question_dict["false_answer1"]
+        if question_dict["false_answer2"] != "nan":
+            answers["false_answer2"] = question_dict["false_answer2"]
+        if question_dict["false_answer3"] != "nan":
+            answers["false_answer3"] = question_dict["false_answer3"]
+
+        cleaned_dict = {"answers": answers, "question": question_dict["question"], "startGame": "true",
+                        "genre": question_dict["genre"]}
+        self.last_answer = cleaned_dict["answers"]["answer"]
+
+        return cleaned_dict
+
+    def checkAnswer(self, team, answer):
+        if self.last_answer == answer:
+            if team == "red":
+                self.red_points += 1
+            if team == "blue":
+                self.blue_points += 1
+
 
 
 class Player:

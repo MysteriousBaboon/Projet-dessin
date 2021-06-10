@@ -9,12 +9,13 @@ export default class ChooseTeam extends Component
       const {websocket} = this.props // websocket instance passed as props to the child component.
       try
       {
-          websocket.send(JSON.stringify({"team": color.target.value, "username":this.props.username, "gameid":this.props.gameid})) //send data to the server
+          websocket.send(JSON.stringify({"team": color.target.value, "username":this.props.username})) //send data to the server
       }
       catch (error)
       {
           console.log(error) // catch error
       }
+      this.props.parentCallback(color)
   }
 
 

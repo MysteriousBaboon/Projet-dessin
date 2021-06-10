@@ -21,6 +21,7 @@ class App extends Component
         question: null,
 
         isHost: null,
+        teamColor: null,
         username: "",
       }
     }
@@ -69,7 +70,7 @@ class App extends Component
            }
            else if(data.startGame)
            {
-             var question = data
+             this.setState({question: data})
              this.setState({gameState: "ingame"})
              this.setState({round: 1})
            }
@@ -103,6 +104,10 @@ class App extends Component
       this.setState({username: username})
     }
 
+    ColorCallback = (color) =>
+    {
+      this.setState({teamColor: color})
+    }
 
     TempCallback = () =>
     {
@@ -125,7 +130,7 @@ class App extends Component
       {
         return(
           <div>
-          <ChooseTeam websocket = {this.state.ws} players={this.state.players} username={this.state.username} gameid={this.state.id} isHost={this.state.isHost}/>
+          <ChooseTeam websocket = {this.state.ws} players={this.state.players} username={this.state.username} parentCallback={this.ColorCallback} isHost={this.state.isHost}/>
           </div>
         )
       }
@@ -134,7 +139,7 @@ class App extends Component
       {
         return(
           <div>
-          <Trivia parentCallback={this.TempCallback} websocket={this.state.ws} players={this.state.players}  question={question}/>
+          <Trivia parentCallback={this.TempCallback} websocket={this.state.ws} players={this.state.players}  question={this.state.question}/>
           </div>
         )
       }
