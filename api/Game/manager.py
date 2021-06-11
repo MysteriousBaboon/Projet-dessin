@@ -1,7 +1,8 @@
-import random
-from api.models import Question
 from django.db.models import Max
 from django.forms.models import model_to_dict
+import random
+
+from api.models import Question
 
 current_games = {}
 
