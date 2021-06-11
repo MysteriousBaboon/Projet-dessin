@@ -32,9 +32,9 @@ class App extends Component
 
     connect = () =>
     {
-       var ws = new WebSocket('ws://127.0.0.1:8000/' + this.state.id + "/" + this.state.username + "/");
+       const ws = new WebSocket('ws://127.0.0.1:8000/' + this.state.id + "/" + this.state.username + "/");
        let that = this; // cache the this
-       var connectInterval;
+       let connectInterval;
 
        // websocket onopen event listener
        ws.onopen = () =>
@@ -160,6 +160,6 @@ class App extends Component
 
 
 
-};
+}
 
 export default App;

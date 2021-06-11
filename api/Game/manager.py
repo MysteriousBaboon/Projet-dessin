@@ -41,6 +41,10 @@ class Game:
         self.username_list.append(player.username)
         self.neutral_team[player.username] = player
 
+    def remove_player(self, player):
+        self.username_list.remove(player)
+        del self.neutral_team[player]
+
     def change_team(self, username, team):
         # Change team if wanted
         if username in self.red_team and team == "blue":
@@ -80,14 +84,12 @@ class Game:
 
         return cleaned_dict
 
+
     def checkAnswer(self, team, answer):
         if self.last_answer == answer:
             if team == "red":
-                print(team, answer)
                 self.red_points += 1
             if team == "blue":
-                print(team, answer)
-
                 self.blue_points += 1
 
         return {"red": self.red_points, "blue": self.blue_points}

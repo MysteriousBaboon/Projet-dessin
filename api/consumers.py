@@ -1,134 +1,135 @@
-# chat/consumers.py
 import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from api import game
+
+from api.Game import manager
 
 
-class ChatConsumer(WebsocketConsumer):
+class GameConsumer(WebsocketConsumer):
+    """
+    Each instance is a player.
+    """
+
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
         self.game = None
+        self.pseudo = None
 
     def connect(self):
+        """
+        Called when connected with websocket
+        """
         room_id = self.scope['url_route']['kwargs']['room_id']
-        pseudo = self.scope['url_route']['kwargs']['pseudo']
+        self.pseudo = self.scope['url_route']['kwargs']['pseudo']
 
-        self.room_name = room_id
-        self.room_group_name = 'chat_%s' % self.room_name
+        self.room_group_name = 'chat_%s' % room_id
 
-        resp = game.add_new_player(room_id, pseudo)
+        # Try to add a new player
+        resp = manager.add_new_player(room_id, self.pseudo)
 
+        # If there is no error
         if resp:
-            async_to_sync(self.channel_layer.group_add)(
-                self.room_group_name,
-                self.channel_name
-            )
-
+            # Add the player to the group
+            async_to_sync(self.channel_layer.group_add)(self.room_group_name, self.channel_name)
             self.accept()
+
+            # Keep the reference to the player's game
             self.game = resp[1]
+
+            # Tell the browser what is the role of the player 
             if resp[0] == "Host":
-                self.send(text_data=json.dumps({
-                    'isHost': "True"
-                }))
+                self.send(text_data=json.dumps({'isHost': "True"}))
             elif resp[0] == "NotHost":
-                self.send(text_data=json.dumps({
-                    'isHost': "False"
-                }))
+                self.send(text_data=json.dumps({'isHost': "False"}))
 
     def disconnect(self, close_code):
+        """
+        Called when websocket is disconnected
+        """
         # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
+        self.game.remove_player(self.pseudo)
+
+        async_to_sync(self.channel_layer.group_discard)(self.room_group_name, self.channel_name)
+
+    def call_on_everyone(self, function_name, data):
+        """
+        Call the specified function name with the specified arguments to all instance in this Room
+        """
+        async_to_sync(self.channel_layer.group_send)(self.room_group_name, {'type': function_name, 'data': data})
 
     def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        if "state" in text_data_json:
-            async_to_sync(self.channel_layer.group_send)(self.room_group_name,
-                                                         {
-                                                             'type': 'get_state',
-                                                             'data': text_data_json
-                                                         })
-        if "message" in text_data_json:
-            message = text_data_json['message']
+        """
+        Called when receiving a JSon from the Browser
+        """
+        data = json.loads(text_data)
 
-            async_to_sync(self.channel_layer.group_send)(self.room_group_name,
-                                                         {
-                                                             'type': 'chat_message',
-                                                             'message': message
-                                                         })
+        # Get a current state of the game
+        if "state" in data:
+            self.call_on_everyone('get_state', data)
 
-        elif "team" in text_data_json:
+        # Get the current teams repartition
+        if "team" in data:
+            self.call_on_everyone('team_pick', data)
 
-            async_to_sync(self.channel_layer.group_send)(self.room_group_name,
-                                                         {
-                                                             'type': 'team_pick',
-                                                             'data': text_data_json
-                                                         })
-        elif "startGame" in text_data_json:
+        # Start the game and pick a question to send to everyone
+        if "startGame" in data:
             send_dict = self.game.pickQuestion()
+            self.call_on_everyone('start_game', send_dict)
 
-            async_to_sync(self.channel_layer.group_send)(self.room_group_name,
-                                                         {
-                                                             'type': 'start_game',
-                                                             'data': send_dict
-                                                         })
+        # Get the message to send to everyone
+        if "message" in data:
+            self.call_on_everyone('send_message', data)
 
-        elif "answer" in text_data_json:
-            game_score = self.game.checkAnswer(text_data_json['color'], text_data_json['answer'])
+        # Get the answer of each teams
+        if "answer" in data:
+            game_score = self.game.checkAnswer(data['color'], data['answer'])
             game_score["score"] = "score"
-            print(game_score)
 
-            async_to_sync(self.channel_layer.group_send)(self.room_group_name,
-                                                         {
-                                                             'type': 'check_answer',
-                                                             'data': game_score
-                                                         })
-
-    # Receive message from room group
-    def chat_message(self, event):
-        message = event['message']
-
-        # Send message to WebSocket
-        self.send(text_data=json.dumps({
-            'message': message
-        }))
+            self.call_on_everyone('check_answer', game_score)
 
     def get_state(self, event):
+        """
+        Get the state of an element of the game
+        """
         data = event['data']
         state_type = data['state']
 
         if state_type == "team":
-            self.send(text_data=json.dumps({
-                'color': {"red": list(self.game.red_team.keys()), "blue": list(self.game.blue_team.keys())}
-            }))
+            self.send(text_data=json.dumps({'color': {"red": list(self.game.red_team.keys()),
+                                                      "blue": list(self.game.blue_team.keys())}}))
 
-    # Receive message from room group
     def team_pick(self, event):
+        """
+        Change the team of a player and send the new teams compo to everyone
+        """
         data = event['data']
-        team = data['team']
-        username = data['username']
 
-        teams_state = self.game.change_team(username, team)
+        teams_state = self.game.change_team(data['username'], data['team'])
 
-        # Send message to WebSocket
-        self.send(text_data=json.dumps({
-            'color': teams_state
-        }))
+        # Send team comp to everyone
+        self.send(text_data=json.dumps({'color': teams_state}))
 
-    # Start the game
     def start_game(self, event):
-        # Send message to WebSocket
+        """
+        Tell everyone to start the game
+        """
+
         data = event["data"]
-        print(event)
         self.send(text_data=json.dumps(data))
 
-    def check_answer(self, event):
-        data = event['data']
-        print(data)
+    def send_message(self, event):
+        """
+        Send the message got from the browser and send it to everyone
+        """
+        message = event['data']
 
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({'message': message}))
+
+    def check_answer(self, event):
+        """
+        Send to everyone the score
+        """
+        data = event['data']
 
         self.send(text_data=json.dumps(data))
